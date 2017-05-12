@@ -2,9 +2,13 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
+#include <avr/interrupt.h>
 
 #define F_CPU	16000000	// This definition tells to _delay_ms() that the CPU runs at 16MHz
 #include <util/delay.h>		// This header contains the _delay_ms() function
+
+int hol;
+int button = 1;
 
 void UART_Init()
 {
@@ -18,6 +22,18 @@ void UART_Init()
 	
 	// Enable RX
 	UCSR0B |= 1 << RXEN0;
+	
+	// Set PORTB5 as output	
+	DDRB |= 1 << DDRB5;
+	
+	// Set the PCINT7 bit of PCMSK0 register.
+	PCMSK0 |= 1 << PCINT7;
+	
+	// Enable pin interrupt on change 0 interrupts.
+	PCICR |= 1 << PCIE0;
+	
+	// Finally, enable the interrupts globally
+	sei();
 }
 
 void UART_SendCharacter(char character)
@@ -40,6 +56,42 @@ char UART_GetCharacter()
 	return UDR0;
 }
 
+high(){
+	for(int i = 0; i < hol; i++){
+		_delay_ms(125);
+		PORTB |= 1 << PORTB5;
+		_delay_ms(125);
+		PORTB &= ~(1 << PORTB5);
+	}
+}
+
+low(){
+	for(int i = 0; i < hol; i++){
+		_delay_ms(125);
+		PORTB |= 1 << PORTB5;
+		_delay_ms(125);
+		PORTB &= ~(1 << PORTB5);
+	}
+}
+
+win(){
+	for(int i = 0; i < 100; i++){
+		PINB |= 1 << PINB5;
+		_delay_ms(25);
+	}
+}
+
+ISR(PCINT0_vect){
+	button++;
+	if(button % 2 == 0){
+		if(hol == 2){
+			high();
+		}else{
+			low();
+		}
+	}
+}
+
 int guesser()
 {
 	srand(time(NULL));
@@ -60,14 +112,19 @@ int guesser()
 		printf("%d\r\n", playersNumber);
 		if(playersNumber == randomNumber){
 			printf("That's my number. Congratulations!\r\n");
+			win();
 			return 0;
 			}else if(playersNumber > randomNumber){
-			lives--;
-			printf("Too high. You have %d lives\r\n", lives);
+				lives--;
+				printf("Too high. You have %d lives\r\n", lives);
+				hol = 2;
+				high();
 			}else{
-			lives--;
-			printf("Too low. You have %d lives\r\n", lives);
-		}
+				lives--;
+				printf("Too low. You have %d lives\r\n", lives);
+				hol = 1;
+				low();
+			}
 		if(lives == 0){
 			printf("\nYou lost.\r\nGAME OVER\r\n");
 			printf("My number was %d.\r\n", randomNumber);
@@ -78,8 +135,8 @@ int guesser()
 
 int main(void)
 {
-
 	UART_Init();
+
 
 	// magic
 	FILE UART_output = FDEV_SETUP_STREAM(UART_SendCharacter, NULL, _FDEV_SETUP_WRITE);
