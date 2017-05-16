@@ -9,15 +9,15 @@
 
 #define RX_CIRC_BUFF_LEN 25
 //TODO: Create the circular buffer with the length of RX_CIRC_BUFF_LEN
-char buff[RX_CIRC_BUFF_LEN];
+volatile char buff[RX_CIRC_BUFF_LEN];
 //TODO: Create the head pointer of the buffer
-char* head = buff;
+volatile char* head = buff;
 //TODO: Create the tail pointer of the buffer
-char* tail = &buff[RX_CIRC_BUFF_LEN-1];
+volatile char* tail = &buff[RX_CIRC_BUFF_LEN-1];
 //TODO: Create the write pointer of the buffer
-char* write = buff;
+volatile char* write = buff;
 //TODO: Create the read pointer of the buffer
-char* read = buff;
+volatile char* read = buff;
 
 ISR(USART_RX_vect) {
 	//TODO:
