@@ -1,0 +1,9 @@
+let item = 0
+item = 4
+basic.showNumber(item)
+item += 1
+basic.showNumber(item)
+item += 1
+basic.showNumber(item)
+item += 1
+basic.showNumber(item)

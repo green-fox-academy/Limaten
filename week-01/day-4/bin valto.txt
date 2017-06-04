@@ -1,0 +1,25 @@
+let dec = 0
+let exp = 0
+let lengthindex = 0
+let bin = 0
+let slength = 0
+let string = ""
+let index = 0
+serial.onDataReceived(serial.delimiters(Delimiters.NewLine), () => {
+    index = 0
+    string = serial.readString()
+    slength = string.length
+    bin = parseInt(string)
+    lengthindex = slength - 2
+    for (let i = 0; i < slength - 1; i++) {
+        if (0 == "1".compare(string.charAt(lengthindex))) {
+            exp = Math.pow(2, index)
+            dec = dec + exp
+        }
+        lengthindex = lengthindex - 1
+        index += 1
+    }
+    serial.writeNumber(dec)
+    serial.writeString("  ")
+    dec = 0
+})

@@ -1,0 +1,40 @@
+let y = 0
+let x = 0
+let elorehatra = 0
+let baljobb = 0
+basic.forever(() => {
+    basic.clearScreen()
+    elorehatra = input.rotation(Rotation.Pitch)
+    baljobb = input.rotation(Rotation.Roll)
+    if (30 < baljobb) {
+        x = 0
+    }
+    if (30 < elorehatra) {
+        y = 0
+    }
+    if (30 > baljobb && 10 < baljobb) {
+        x = 1
+    }
+    if (30 > elorehatra && 10 < elorehatra) {
+        y = 1
+    }
+    if (10 > baljobb && -10 < baljobb) {
+        x = 2
+    }
+    if (10 > elorehatra && -10 < elorehatra) {
+        y = 2
+    }
+    if (-10 > baljobb && -30 < baljobb) {
+        x = 3
+    }
+    if (-10 > elorehatra && -30 < elorehatra) {
+        y = 3
+    }
+    if (-30 > baljobb) {
+        x = 4
+    }
+    if (-30 > elorehatra) {
+        y = 4
+    }
+    led.plot(x, y)
+})

@@ -1,0 +1,12 @@
+input.onGesture(Gesture.Shake, () => {
+    while (input.buttonIsPressed(Button.B)) {
+        basic.showLeds(`
+            . . # . .
+            . . # . .
+            . . # . .
+            . . . . .
+            . . # . .
+            `)
+    }
+    basic.clearScreen()
+})

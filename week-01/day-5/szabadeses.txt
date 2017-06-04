@@ -1,0 +1,14 @@
+let x = 0
+basic.forever(() => {
+    basic.clearScreen()
+    x = Math.abs(input.acceleration(Dimension.Z))
+    if (x < 500) {
+        basic.showLeds(`
+            . # # # .
+            # . . . #
+            # . # . #
+            # . . . #
+            . # # # .
+            `)
+    }
+})

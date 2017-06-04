@@ -1,0 +1,6 @@
+let item = ""
+serial.onDataReceived(serial.delimiters(Delimiters.NewLine), () => {
+    item = serial.readString()
+    basic.showString(item)
+    serial.writeString(item)
+})
