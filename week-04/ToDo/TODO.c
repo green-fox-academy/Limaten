@@ -158,25 +158,45 @@ task *empty_list(task *tasks)
 /************************
  * Remove from the list *
  ************************/
- /*
-task* remove(task *tasks, int i)
+
+task* remove_task(task *tasks)
 {
+    int i = 0;
+    int change_number = 0;
+    task *rem_ptr =  tasks;
+    task *prev = NULL;
+
+    printf("Which task you want to remove?\n");
+    scanf("%d", &i);
+
     if (tasks == NULL) {
         printf("\nThere is NO task to remove!\n");
-    } else if (tasks->next == NULL) {
-        free(tasks);
-    } else {
-        task *rem_ptr = tasks;
-        while (rem_ptr->next != NULL) {
-            if(rem_ptr->number == i){
-
-            }
-        }
     }
+
+    while (rem_ptr != NULL) {
+        if (rem_ptr->number == i) {
+            if (prev == NULL) {
+                free(tasks);
+                change_number = 1;
+            } else {
+                prev->next = rem_ptr->next;
+                free(rem_ptr);
+                rem_ptr = prev->next;
+                change_number = 1;
+            }
+
+        }
+        if (change_number == 1) {
+            rem_ptr->number = rem_ptr->number - 1;
+        }
+        prev = rem_ptr;
+        rem_ptr = rem_ptr->next;
+    }
+
     return tasks;
 }
 
-*/
+
 /********
  * Menu *
  ********/
@@ -196,7 +216,7 @@ task *menu(task *tasks, char *comm)
     } else if (strcmp(comm, "-e") == 0) {
         tasks = empty_list(tasks);
     } else if (strcmp(comm, "-r") == 0) {
-
+        tasks = remove_task(tasks);
     } else {
         printf("\n%s is NOT a valid command\n", comm);
     }
