@@ -29,7 +29,7 @@ int main(void)
 	
 	while (1)
 	{
-		percent = (100 * (ADC_read() >> 2)) / 255;
+		percent = ADC_read() / 10.23;
 		printf("%d\n", percent);
 		duty_time(percent);
 	}
