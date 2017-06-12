@@ -9,15 +9,14 @@ void system_init()
 	
 	TCCR0A |= 1 << WGM00;
 	TCCR0A |= 1 << WGM01;
-	TCCR0B |= 1 << WGM02;
 	
 	TCCR0B |= 1 << CS00;
 	
-	TCCR0A |= 1 << COM0A0;
+	TCCR0A |= 1 << COM0A1;
 }
 
 void duty_time()
 {
-//	uint8_t dt = 100 * 255 / DUTY; 
-	OCR0A = 80;
+	uint8_t dt = DUTY * 255 / 100;
+	OCR0A = dt;
 }
