@@ -34,5 +34,5 @@ uint16_t ADC_read() {
 
 	// TODO:
 	// return with the read data, use the "ADC" register!
-	return (ADC);
+	return ADC;
 }

@@ -1,5 +1,5 @@
 #include <avr/io.h>
-#include "DIM_LED_PWM.h"
+#include "DIM_LED_POT.h"
 
 void system_init()
 {
@@ -15,7 +15,7 @@ void system_init()
 	TCCR0A |= 1 << COM0A1;
 }
 
-void duty_time(uint8_t percent)
+void duty_time(int percent)
 {
 	uint8_t dt =  percent * 255 / 100;
 	OCR0A = dt;
