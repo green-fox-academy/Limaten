@@ -53,6 +53,6 @@ float get_freq()
 	double steps;
 	double period;
 	steps = stay_tovfcnt * 65534 - start + stop;
-	period = 64.0 * (double)steps / 16000000.0;
+	period = 64 * steps / 16000000;
 	return (1 / period);
 }
