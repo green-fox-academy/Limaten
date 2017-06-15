@@ -29,16 +29,16 @@ int main(void)
 	char buffer[5];
 	
 	while (1)
-	{
+	{/*
 		(scanf("%s", &buffer));
 		uart_percent = atoi(buffer);
 		printf("uart_percent: %d\n", uart_percent);
-		duty_time(uart_percent);
-		/*
+		//duty_time(uart_percent);
+	*/
 		adc_percent = ADC_read() / 10.23;
 		printf("adc_percent: %d\n", adc_percent);
-		duty_time(adc_percent * uart_percent);
-		*/
+		duty_time(adc_percent);
+		
 	}
 }
 
