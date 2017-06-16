@@ -3,6 +3,7 @@
 #include "AC_driver.h"
 #include "ADC_DRIVER.h"
 #include "PWM.h"
+#include "TC74_driver.h"
 #include <avr/io.h>
 #include <stdio.h>
 #include <avr/interrupt.h>
@@ -30,6 +31,7 @@ void system_init()
 	UART_init();
 	pwm_init();
 	ADC_init();
+	TWI_init();
 	sei();
 }
 
@@ -38,12 +40,15 @@ int main(void)
 
 	// Don't forget to call the init function :)
 	system_init();
-	float p = 10;
+	float p = 5;
+	float i = 0.1;
 	int ref;
-	int ctrl_out_max = 100;
+	int ctrl_out_max = 99;
 	int ctrl_out_min = 0;
 	float err;
+	float integral = 0;
 	int ctrl_out;
+	int temp;
 	// Setting up STDIO input and output buffer
 	// You don't have to understand this!
 	//----- START OF STDIO IO BUFFER SETUP
@@ -69,16 +74,22 @@ int main(void)
 		//printf("adc_percent: %d\n", adc_percent);
 		//duty_time(adc_percent);
 		_delay_ms(10);
-		ref = (ADC_read() / MAX_ADC) * MAX_RMP;
-		err = ref - get_rpm();
-		ctrl_out = p * err;
+		ref = 10 + (ADC_read() / 10.23) * 0.3;
+		temp = get_temperature(TC74A0_ADRESS);
+		err = temp - ref;
+		integral = integral + err;
+		ctrl_out = p * err + i * integral;
 		//printf("ctrl_out before: %d\n", ctrl_out);
-		if (ctrl_out < ctrl_out_min)
+		if (ctrl_out < ctrl_out_min) {
 			ctrl_out = ctrl_out_min;
-		else if (ctrl_out > ctrl_out_max)
+			integral = integral - err;
+		}
+		else if (ctrl_out > ctrl_out_max) {
 			ctrl_out = ctrl_out_max;
+			integral = integral - err;
+		}
 		//printf("ctrl_out after: %d\n", ctrl_out);
 		duty_time(ctrl_out);
-		printf("ctrl_out: %d\t%.2f Hz\t%.2f RPM\tref: %d\n", ctrl_out, get_freq(), get_rpm(), ref);
+		printf("duty_time: %d%%\t%.2f RPM\tref: %dC\ttmperature: %dC\n", ctrl_out, get_rpm(), ref, temp);
 	}
 }
