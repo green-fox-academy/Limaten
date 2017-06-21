@@ -65,9 +65,9 @@ TS_StateTypeDef *ts_state_ptr = &ts_state;
 TS_StateTypeDef ts_state_prev;
 TS_StateTypeDef *ts_state_prev_ptr = &ts_state_prev;
 uint8_t finger_down = 0;
+uint8_t click_event = 0;
 USBD_HandleTypeDef USBD_Device;
 uint8_t HID_Buffer[4];
-uint64_t cntr;
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
@@ -135,27 +135,42 @@ int main(void) {
 		if (ts_state.touchDetected) {
 			BSP_LCD_SelectLayer(2);
 			BSP_LCD_SetTextColor(0xFFFF0000);
-			BSP_LCD_FillCircle(ts_state_ptr->touchX[0], ts_state_ptr->touchY[0], 5);
+			BSP_LCD_FillCircle(ts_state_ptr->touchX[0], ts_state_ptr->touchY[0], 25);
+			/*
 			if (left_click(ts_state_ptr)) {
 				HID_Buffer[0] = 1;
 			}
+			*/
 			if (finger_down) {
 				HID_Buffer[1] = 3 * (ts_state_ptr->touchX[0] - ts_state_prev_ptr->touchX[0]);
 				HID_Buffer[2] = 3 * (ts_state_ptr->touchY[0] - ts_state_prev_ptr->touchY[0]);
+				if (abs(ts_state_ptr->touchX[0] - ts_state_prev_ptr->touchX[0]) > 1 ||
+					abs(ts_state_ptr->touchY[0] - ts_state_prev_ptr->touchY[0]) > 1)
+					click_event = 0;
 			} else {
 				HID_Buffer[1] = 0;
 				HID_Buffer[2] = 0;
+				click_event = 1;
+
 			}
 			ts_state_prev = ts_state;
 			finger_down = 1;
+			USBD_HID_SendReport(&USBD_Device, HID_Buffer, 4);
 		} else {
 			finger_down = 0;
 			HID_Buffer[1] = 0;
 			HID_Buffer[2] = 0;
+			if (click_event) {
+				HID_Buffer[0] = 1;
+				USBD_HID_SendReport(&USBD_Device, HID_Buffer, 4);
+				HID_Buffer[0] = 0;
+				USBD_HID_SendReport(&USBD_Device, HID_Buffer, 4);
+				click_event = 0;
+			}
 		}
-		USBD_HID_SendReport(&USBD_Device, HID_Buffer, 4);
-		HID_Buffer[0] = 0;
+
 		HAL_Delay(10);
+		BSP_LCD_Clear(0xFF707020);
 	}
 }
 
