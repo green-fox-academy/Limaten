@@ -57,7 +57,7 @@ void send_req()
     client_socket_udp = socket(AF_INET, SOCK_DGRAM, 0);
     setsockopt(client_socket_udp, SOL_SOCKET, SO_BROADCAST, &var, sizeof(var));
     char *broadcast_msg;
-    broadcast_msg = "TOTORO 24862";
+    broadcast_msg = "TOTORO 26842";
     struct sockaddr_in addr_in;
 	addr_in.sin_family = AF_INET;
 	addr_in.sin_port = htons(12345);

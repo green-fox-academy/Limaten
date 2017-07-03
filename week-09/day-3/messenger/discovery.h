@@ -8,7 +8,7 @@
 #include <conio.h>
 #include <math.h>
 
-#define DSC_SERVER_PORT     24862
+#define DSC_SERVER_PORT     26842
 #define DATA_BUFFER_SIZE    1024
 
 void thread_discovery();
