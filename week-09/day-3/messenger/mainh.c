@@ -1,14 +1,20 @@
-//number of  online users
-int number_users;
+#include "send.h"
+#include "server.h"
+#include "broadcast.h"
+#include "discovery.h"
+#include "mainh.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <winsock2.h>
+#include <conio.h>
+#include <math.h>
 
-//online users struct
-struct users_online {
-    unsigned long ip_address;
-    int port;
-    char name[30];
-};
 
-//print menu
+
+
+//extern struct users_online users[50];
+
 void print_menu()
 {
     printf(" TOTORO CHAT\n"
@@ -22,8 +28,7 @@ void print_menu()
            " m\tSend message\n\n");
 }
 
-//print online users
-void print_users(struct users_online *users)
+void print_users()
 {
     printf(" IP\t\tPORT\tNAME\n");
     for (int i = 0; i < number_users; i++) {
