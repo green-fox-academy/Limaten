@@ -131,16 +131,16 @@ static void StartThread(void const * argument)
   User_notification(&gnetif);
   
   /* Start DHCPClient */
-  osThreadDef(DHCP, DHCP_thread, osPriorityBelowNormal, 0, configMINIMAL_STACK_SIZE * 2);
-  osThreadCreate (osThread(DHCP), &gnetif);
+  //osThreadDef(DHCP, DHCP_thread, osPriorityBelowNormal, 0, configMINIMAL_STACK_SIZE * 2);
+  //osThreadCreate (osThread(DHCP), &gnetif);
 
   // Start led matrix updater thread
   osThreadDef(LED_MATRIX_UPDATE, led_matrix_update_thread, osPriorityLow, 0, configMINIMAL_STACK_SIZE * 2);
   osThreadCreate (osThread(LED_MATRIX_UPDATE), NULL);
 
   // Start waterfall thread
-  //osThreadDef(ADC, led_matrix_adc_thread, osPriorityLow, 0, configMINIMAL_STACK_SIZE * 2);
-  //osThreadCreate (osThread(ADC), NULL);
+  osThreadDef(ADC, led_matrix_adc_thread, osPriorityLow, 0, configMINIMAL_STACK_SIZE * 2);
+  osThreadCreate (osThread(ADC), NULL);
 
   osThreadDef(LED_MATRIX_WATERFALL, led_matrix_waterfall_thread, osPriorityLow, 0, configMINIMAL_STACK_SIZE * 2);
   osThreadCreate (osThread(LED_MATRIX_WATERFALL), NULL);

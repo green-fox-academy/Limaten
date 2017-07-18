@@ -75,6 +75,8 @@ void led_matrix_set(uint8_t in_row, uint8_t in_col, uint8_t state) {
 // Write this function!
 void led_matrix_update_thread(void const *argument)
 {
+
+	msg_id = osMessageCreate(osMessageQ(msg), NULL);
 	// TODO:
 	// Initialize the pins as outputs and the led_matrix_state 2D array
 	led_matrix_gpio_init();
@@ -125,7 +127,7 @@ void led_matrix_update_thread(void const *argument)
 // This thread is a waterfall type animation
 void led_matrix_waterfall_thread(void const *argument)
 {
-	led_matrix_gpio_init();
+	//led_matrix_gpio_init();
 	uint32_t value;
 	osEvent  evt;
 	while (1) {
@@ -134,7 +136,7 @@ void led_matrix_waterfall_thread(void const *argument)
 				led_matrix_set(r, c, 1);
 				evt = osMessageGet(msg_id, osWaitForever);
 				value = evt.value.v;
-				osDelay(25);
+				osDelay((float)value / 4095.0 * 40 + 5);
 				led_matrix_set(r, c, 0);
 			}
 		}
@@ -149,15 +151,24 @@ void led_matrix_waterfall_thread(void const *argument)
 
 void led_matrix_adc_thread(void const *argument)
 {
+	osDelay(1000);
 	BSP_LCD_Init();
 	BSP_LCD_LayerDefaultInit(0, LCD_FB_START_ADDRESS);
 	BSP_LCD_SelectLayer(0);
 	BSP_LCD_DisplayOn();
 	BSP_LCD_Clear(LCD_COLOR_BLACK);
 
+	__HAL_RCC_ADC3_CLK_ENABLE();
+
+	GPIO_InitTypeDef GPIO_InitStruct;
+	GPIO_InitStruct.Pin = GPIO_PIN_0;	// pin 0 of GPIOA
+	GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
 	adc_handle.State = HAL_ADC_STATE_RESET;
 	adc_handle.Instance = ADC3;
-	adc_handle.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
+	adc_handle.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV8;
 	adc_handle.Init.Resolution = ADC_RESOLUTION_12B;
 	adc_handle.Init.EOCSelection = ADC_EOC_SEQ_CONV;
 	adc_handle.Init.DMAContinuousRequests = DISABLE;
@@ -172,7 +183,7 @@ void led_matrix_adc_thread(void const *argument)
 	// ADC inits
 	HAL_ADC_Init(&adc_handle);
 	HAL_ADC_ConfigChannel(&adc_handle, &adc_ch);
-	uint32_t adc_value;
+	int adc_value;
 
 	//msg_id = osMessageCreate(osMessageQ(msg), NULL);
 	HAL_ADC_Start(&adc_handle);
@@ -186,6 +197,7 @@ void led_matrix_adc_thread(void const *argument)
 		BSP_LCD_ClearStringLine(0);
 		BSP_LCD_DisplayStringAtLine(0, (uint8_t *)buff);
 		osDelay(10);
+		osMessagePut(msg_id, adc_value, osWaitForever);
 	}
 
 	while (1) {
