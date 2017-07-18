@@ -3,19 +3,24 @@
 #include "stm32f7xx_hal.h"
 #include "lcd_log.h"
 #include "cmsis_os.h"
+#include "stm32f7xx_hal_adc.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef adc_handle;
+ADC_ChannelConfTypeDef adc_ch;
+osMessageQDef(msg, 1, uint32_t);              // Define message queue
+osMessageQId  msg_id;
 
 // Each LED state is stored in this 2D array
 GPIO_PinState led_matrix_state[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
-	{1,0,0,1,0,0,1},
 	{0,0,1,0,0,1,0},
 	{0,1,0,0,1,0,0},
 	{1,0,0,1,0,0,1},
 	{0,0,1,0,0,1,0},
+	{0,1,0,0,1,0,0},
 };
 
 // Mutex definition
@@ -56,15 +61,14 @@ void led_matrix_set(uint8_t row, uint8_t col, uint8_t state);
 void led_matrix_set(uint8_t in_row, uint8_t in_col, uint8_t state) {
 	// TODO:
 	// Wait for the mutex
-	//osMutexWait(led_matrix_mutex_id, osWaitForever);
+	osMutexWait(led_matrix_mutex_id, osWaitForever);
 	// TODO:
 	// Change the LED in the selected row and col to the specified state
 	// Use the led_matrix_state 2D array variable!
-	HAL_GPIO_WritePin(row[in_row].gpio_port, row[in_row].pin_num, state);
-	HAL_GPIO_WritePin(column[in_col].gpio_port, column[in_col].pin_num, state);
+	led_matrix_state [in_row][in_col] = state;
 	// TODO:
 	// Release the mutex
-	//osMutexRelease(led_matrix_mutex_id);
+	osMutexRelease(led_matrix_mutex_id);
 }
 
 // TODO:
@@ -89,36 +93,27 @@ void led_matrix_update_thread(void const *argument)
 
 		// Step 1:
 		// Iterate through every column or row
-
-			// Step 2:
-			// Wait for the mutex
-		osMutexWait(led_matrix_mutex_id, osWaitForever);
-
-			// Step 3:
-			// Turn on the column or row
-
-
-			// Step 4:
-			// Turn on the leds in that column or row
 		for(int i = 0; i < LED_MATRIX_ROWS; i++) {
 			for (int j = 0; j < LED_MATRIX_COLS; j++) {
-				led_matrix_set(i, j, led_matrix_state[i][j]);
-				osDelay(100);
-				led_matrix_set(i, j, 0);
-			}
-		}
 
-			// Step 5:
+			// Wait for the mutex
+			osMutexWait(led_matrix_mutex_id, osWaitForever);
+
+			// Turn on the leds in that column or row
+			HAL_GPIO_WritePin(column[j].gpio_port, column[j].pin_num, !led_matrix_state[i][j]);
+
 			// Release the mutex
-		osMutexRelease(led_matrix_mutex_id);
+			osMutexRelease(led_matrix_mutex_id);
 
-			// Step 6:
-			// Delay
-		osDelay(250);
-
-			// Step 7:
-			// Turn off the column or row
+			}
+			//row up
+			HAL_GPIO_WritePin(row[i].gpio_port, row[i].pin_num, 1);
+			osDelay(1);
+			//row down
+			HAL_GPIO_WritePin(row[i].gpio_port, row[i].pin_num, 0);
+		}
 	}
+
 
 	// Terminating thread
 	while (1) {
@@ -130,11 +125,16 @@ void led_matrix_update_thread(void const *argument)
 // This thread is a waterfall type animation
 void led_matrix_waterfall_thread(void const *argument)
 {
+	led_matrix_gpio_init();
+	uint32_t value;
+	osEvent  evt;
 	while (1) {
 		for (uint8_t r = 0; r < LED_MATRIX_ROWS; r++) {
 			for (uint8_t c = 0; c < LED_MATRIX_COLS; c++) {
 				led_matrix_set(r, c, 1);
-				osDelay(50);
+				evt = osMessageGet(msg_id, osWaitForever);
+				value = evt.value.v;
+				osDelay(25);
 				led_matrix_set(r, c, 0);
 			}
 		}
@@ -146,6 +146,53 @@ void led_matrix_waterfall_thread(void const *argument)
 	}
 }
 
+
+void led_matrix_adc_thread(void const *argument)
+{
+	BSP_LCD_Init();
+	BSP_LCD_LayerDefaultInit(0, LCD_FB_START_ADDRESS);
+	BSP_LCD_SelectLayer(0);
+	BSP_LCD_DisplayOn();
+	BSP_LCD_Clear(LCD_COLOR_BLACK);
+
+	adc_handle.State = HAL_ADC_STATE_RESET;
+	adc_handle.Instance = ADC3;
+	adc_handle.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
+	adc_handle.Init.Resolution = ADC_RESOLUTION_12B;
+	adc_handle.Init.EOCSelection = ADC_EOC_SEQ_CONV;
+	adc_handle.Init.DMAContinuousRequests = DISABLE;
+	adc_handle.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+	adc_handle.Init.ContinuousConvMode = ENABLE;
+	adc_handle.Init.DiscontinuousConvMode = DISABLE;
+	adc_handle.Init.ScanConvMode = DISABLE;
+
+	adc_ch.Channel      = ADC_CHANNEL_0;
+	adc_ch.SamplingTime = ADC_SAMPLETIME_480CYCLES;
+
+	// ADC inits
+	HAL_ADC_Init(&adc_handle);
+	HAL_ADC_ConfigChannel(&adc_handle, &adc_ch);
+	uint32_t adc_value;
+
+	//msg_id = osMessageCreate(osMessageQ(msg), NULL);
+	HAL_ADC_Start(&adc_handle);
+	while (1) {
+
+		//HAL_ADC_PollForConversion(&adc_handle, HAL_MAX_DELAY);
+		adc_value = HAL_ADC_GetValue(&adc_handle);
+		//osMessagePut(msg_id, adc_value, osWaitForever);
+		char buff[100];
+		sprintf(buff, "%d", adc_value);
+		BSP_LCD_ClearStringLine(0);
+		BSP_LCD_DisplayStringAtLine(0, (uint8_t *)buff);
+		osDelay(10);
+	}
+
+	while (1) {
+		LCD_ErrLog("ADC - terminating...\n");
+		osThreadTerminate(NULL);
+	}
+}
 
 void led_matrix_gpio_init()
 {

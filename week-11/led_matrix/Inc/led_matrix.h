@@ -16,6 +16,7 @@
 /* Exported functions ------------------------------------------------------- */
 void led_matrix_update_thread(void const *argument);
 void led_matrix_waterfall_thread(void const *argument);
+void led_matrix_adc_thread(void const *argument);
 void led_matrix_gpio_init();
 #endif /* __LED_MATRIX_H */
 
